@@ -15,8 +15,12 @@ fi
 # 2. INSTALL OLLAMA
 if ! command -v ollama &> /dev/null; then
     echo "🦙 Installing Ollama..."
-    curl -L https://ollama.com/download/ollama-linux-amd64 -o "$HOME/.local/bin/ollama"
+    # Use the GitHub Releases URL (Stable)
+    curl -L https://github.com/ollama/ollama/releases/latest/download/ollama-linux-amd64 -o "$HOME/.local/bin/ollama"
     chmod +x "$HOME/.local/bin/ollama"
+    echo "✅ Ollama installed."
+else
+    echo "✅ Ollama is already installed."
 fi
 
 # 3. INSTALL BLE.SH (Syntax Highlighting for Bash)
