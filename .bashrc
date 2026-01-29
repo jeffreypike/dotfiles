@@ -1,8 +1,12 @@
-# Load system defaults if they exist
-[ -f /etc/bashrc ] && . /etc/bashrc
+# 1. Load ble.sh (The Syntax Highlighting Engine)
+# Check if it exists and source it
+if [ -f "$HOME/.local/share/blesh/ble.sh" ]; then
+    source "$HOME/.local/share/blesh/ble.sh"
+fi
 
-# Add ~/.local/bin to PATH so it finds Starship
+# 2. Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
 
-# Start Starship
+# 3. Initialize Starship (The Rainbow Prompt)
+# We use a special flag to make sure it plays nice with ble.sh
 eval "$(starship init bash)"

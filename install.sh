@@ -1,83 +1,50 @@
 #!/bin/bash
 
-# =============================================================================
-#  CONFIG & PATHS
-# =============================================================================
-
-# Force the script to assume the repo is located at ~/dotfiles
-# This prevents relative path errors when running the script from other folders.
 REPO_DIR="$HOME/dotfiles"
-
-# Ensure ~/.local/bin exists and is in PATH for this session
 mkdir -p "$HOME/.local/bin"
 export PATH="$HOME/.local/bin:$PATH"
 
-echo "🔧 Starting Dotfiles Installation..."
+echo "🔧 Starting Setup..."
 
-# =============================================================================
-#  1. INSTALL STARSHIP (Visuals)
-# =============================================================================
-
+# 1. INSTALL STARSHIP
 if ! command -v starship &> /dev/null; then
     echo "🚀 Installing Starship..."
     sh -c "$(curl -fsSL https://starship.rs/install.sh)" -- --yes --bin-dir "$HOME/.local/bin"
-else
-    echo "✅ Starship is already installed."
 fi
 
-# =============================================================================
-#  2. INSTALL OLLAMA (AI)
-# =============================================================================
-
+# 2. INSTALL OLLAMA
 if ! command -v ollama &> /dev/null; then
-    echo "🦙 Installing Ollama (User-space)..."
-    # Download Linux AMD64 binary
+    echo "🦙 Installing Ollama..."
     curl -L https://ollama.com/download/ollama-linux-amd64 -o "$HOME/.local/bin/ollama"
     chmod +x "$HOME/.local/bin/ollama"
-    echo "✅ Ollama installed."
-else
-    echo "✅ Ollama is already installed."
 fi
 
-# =============================================================================
-#  3. LINK CONFIG FILES
-# =============================================================================
+# 3. INSTALL BLE.SH (Syntax Highlighting for Bash)
+if [ ! -f "$HOME/.local/share/blesh/ble.sh" ]; then
+    echo "🎨 Installing ble.sh (Syntax Highlighting)..."
+    mkdir -p "$HOME/.local/share"
+    # Download the nightly build (pre-compiled)
+    curl -L https://github.com/akinomyoga/ble.sh/releases/download/nightly/ble-nightly.tar.xz | tar xJf - -C "$HOME/.local/share"
+    # Rename folder to standard name
+    mv "$HOME/.local/share/ble-nightly" "$HOME/.local/share/blesh"
+    echo "✅ ble.sh installed."
+else
+    echo "✅ ble.sh is already installed."
+fi
 
-echo "🔗 Linking Configuration Files..."
+# 4. LINK FILES
+echo "🔗 Linking Configs..."
+# Clean up old links
+rm -rf "$HOME/.config/starship.toml" "$HOME/.bashrc" "$HOME/.zshrc"
 
-# Helper function to link files safely
-link_file() {
-    local source_file="$1"
-    local target_file="$2"
+# Link Starship
+mkdir -p "$HOME/.config"
+ln -s "$REPO_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
 
-    # Check if source exists in the repo
-    if [ ! -e "$source_file" ]; then
-        echo "⚠️  WARNING: Source file not found: $source_file"
-        return
-    fi
+# Link Bashrc
+ln -s "$REPO_DIR/.bashrc" "$HOME/.bashrc"
 
-    # Create target directory if needed
-    mkdir -p "$(dirname "$target_file")"
+# Link Zshrc (Just in case you use it locally)
+ln -s "$REPO_DIR/.zshrc" "$HOME/.zshrc"
 
-    # Remove existing file or symlink to avoid loops/errors
-    rm -rf "$target_file"
-
-    # Create the symlink
-    ln -s "$source_file" "$target_file"
-    echo "   Linked: $target_file -> $source_file"
-}
-
-# Link Starship Config
-link_file "$REPO_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
-
-# Link Shell Configs
-link_file "$REPO_DIR/.bashrc" "$HOME/.bashrc"
-link_file "$REPO_DIR/.zshrc" "$HOME/.zshrc"
-
-# =============================================================================
-#  4. FINISH
-# =============================================================================
-
-echo "🎉 Setup Complete!"
-echo "👉 Type 'source ~/.bashrc' (or restart your terminal) to see the changes."
-EOF
+echo "🎉 Done! Type 'source ~/.bashrc' to load the highlighting!"
