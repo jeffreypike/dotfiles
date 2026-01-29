@@ -7,35 +7,32 @@ if ! command -v starship &> /dev/null; then
     sh -c "$(curl -fsSL https://starship.rs/install.sh)" -- --yes --bin-dir "$HOME/.local/bin"
 fi
 
-# 2. Function to backup and link files
+# 2. Link Configs
+# This assumes the script is run from inside the repo
+REPO_DIR="$PWD"
+
+# Helper function to backup and link
 link_file() {
     local src="$1"
     local dest="$2"
 
-    # Create destination directory if it doesn't exist
-    mkdir -p "$(dirname "$dest")"
-
-    # If the file exists and is NOT a symlink, back it up
+    # Backup if it exists and is not already a symlink
     if [ -f "$dest" ] && [ ! -L "$dest" ]; then
-        echo "📦 Backing up existing $dest to ${dest}.backup"
         mv "$dest" "${dest}.backup"
     fi
-
-    # Create the symlink
-    # -s = symbolic, -f = force (overwrite if exists), -n = no dereference
-    echo "🔗 Linking $dest -> $src"
-    ln -sfn "$src" "$dest"
+    
+    # Create the link
+    mkdir -p "$(dirname "$dest")"
+    ln -sf "$src" "$dest"
 }
-
-# 3. Create the links
-# These variables assume the script is run from inside the dotfiles folder
-REPO_DIR="$PWD"
 
 # Link Starship Config
 link_file "$REPO_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
 
-# Link Shell Configs
+# Link Bash Config (For Coder Remote)
 link_file "$REPO_DIR/.bashrc" "$HOME/.bashrc"
+
+# Link Zsh Config (For Local Mac / Future Zsh use)
 link_file "$REPO_DIR/.zshrc" "$HOME/.zshrc"
 
-echo "✅ Dotfiles installed! Restart your terminal."
+echo "✅ Dotfiles installed! Please restart your terminal."

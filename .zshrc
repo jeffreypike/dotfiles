@@ -1,16 +1,21 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2822
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\margl1440\margr1440\vieww11520\viewh8400\viewkind0
-\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+# Path to Oh My Zsh
+export ZSH="$HOME/.oh-my-zsh"
 
-\f0\fs24 \cf0 # If you use Oh My Zsh locally, load it (adjust path if needed)\
-export ZSH="$HOME/.oh-my-zsh"\
-[ -f "$ZSH/oh-my-zsh.sh" ] && source "$ZSH/oh-my-zsh.sh"\
-\
-# Add ~/.local/bin to PATH\
-export PATH="$HOME/.local/bin:$PATH"\
-\
-# Start Starship\
-eval "$(starship init zsh)"}
+# We leave the theme empty or default because Starship will handle the visuals
+ZSH_THEME="robbyrussell"
+
+# Standard plugins
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
+
+# Load Oh My Zsh if it exists
+if [ -f "$ZSH/oh-my-zsh.sh" ]; then
+    source "$ZSH/oh-my-zsh.sh"
+fi
+
+# Add local bin to PATH (for Starship/Ollama)
+export PATH="$HOME/.local/bin:$PATH"
+
+# Initialize Starship
+if command -v starship &> /dev/null; then
+    eval "$(starship init zsh)"
+fi
