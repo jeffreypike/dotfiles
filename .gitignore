@@ -1,0 +1,33 @@
+# Secrets / credentials — never commit
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+id_ecdsa*
+id_dsa*
+*.gpg
+*.asc
+.netrc
+.aws/credentials
+.ssh/
+
+# Machine-local overrides (users can keep per-machine config here without checking it in)
+.gitconfig.local
+.shellrc.local
+.bashrc.local
+.zshrc.local
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editor cruft
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
