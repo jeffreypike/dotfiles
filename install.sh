@@ -64,7 +64,33 @@ else
     echo "✅ ble.sh is already installed."
 fi
 
-# 4. INSTALL thefuck (typo corrector — invoke with `fuck` or `fix` after a failed cmd)
+# 4. INSTALL GITHUB CLI (gh)
+# Tracks the latest release from github.com/cli/cli. Override with GH_VERSION=vX.Y.Z.
+GH_VERSION="${GH_VERSION:-$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
+    | grep -m1 '"tag_name"' | cut -d'"' -f4)}"
+
+if [ -z "$GH_VERSION" ]; then
+    echo "⚠️  Could not determine latest gh version. Skipping."
+else
+    INSTALLED_GH=""
+    if command -v gh &> /dev/null; then
+        INSTALLED_GH="$(gh --version 2>/dev/null | awk 'NR==1 {print $3}')"
+    fi
+    if [ "$INSTALLED_GH" != "${GH_VERSION#v}" ]; then
+        echo "🐙 Installing gh ${GH_VERSION} (found: ${INSTALLED_GH:-none})..."
+        TMPDIR="$(mktemp -d)"
+        curl -fL "https://github.com/cli/cli/releases/download/${GH_VERSION}/gh_${GH_VERSION#v}_linux_amd64.tar.gz" \
+            | tar xzf - -C "$TMPDIR"
+        cp "$TMPDIR/gh_${GH_VERSION#v}_linux_amd64/bin/gh" "$HOME/.local/bin/gh"
+        chmod +x "$HOME/.local/bin/gh"
+        rm -rf "$TMPDIR"
+        echo "✅ gh ${GH_VERSION} installed."
+    else
+        echo "✅ gh ${GH_VERSION} is already installed."
+    fi
+fi
+
+# 5. INSTALL thefuck (typo corrector — invoke with `fuck` or `fix` after a failed cmd)
 if ! command -v thefuck &> /dev/null; then
     echo "💥 Installing thefuck..."
     if command -v uv &> /dev/null; then
@@ -78,7 +104,7 @@ if ! command -v thefuck &> /dev/null; then
     fi
 fi
 
-# 5. LINK FILES
+# 6. LINK FILES
 echo "🔗 Linking Configs..."
 mkdir -p "$HOME/.config"
 ln -sf "$REPO_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
@@ -86,7 +112,7 @@ ln -sf "$REPO_DIR/.bashrc" "$HOME/.bashrc"
 ln -sf "$REPO_DIR/.zshrc" "$HOME/.zshrc"
 # .shellrc is sourced by both rcs via $HOME/dotfiles/.shellrc, no symlink needed
 
-# 6. PRE-PULL DEFAULT OLLAMA MODEL (background, non-blocking)
+# 7. PRE-PULL DEFAULT OLLAMA MODEL (background, non-blocking)
 # Skipped if ollama isn't installed, already has the model, or isn't running.
 if command -v ollama &> /dev/null; then
     DEFAULT_MODEL="${OLLAMA_DEFAULT_MODEL:-gemma4:e4b}"
