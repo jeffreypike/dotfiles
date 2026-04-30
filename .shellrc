@@ -1,0 +1,70 @@
+# Shared shell config sourced from both .bashrc (linux/remote) and .zshrc (mac/local).
+# Keep everything in here POSIX-ish and guarded with `command -v` checks so it works
+# on both bash and zsh. Shell-specific bits live in the respective rc files.
+
+# ---- PATH ----
+export PATH="$HOME/.local/bin:$PATH"
+
+# ---- Detect shell once so downstream snippets can branch ----
+if [ -n "${ZSH_VERSION:-}" ]; then
+    _CURRENT_SHELL="zsh"
+elif [ -n "${BASH_VERSION:-}" ]; then
+    _CURRENT_SHELL="bash"
+else
+    _CURRENT_SHELL="sh"
+fi
+
+# ---- Starship prompt ----
+if command -v starship >/dev/null 2>&1; then
+    eval "$(starship init "$_CURRENT_SHELL")"
+fi
+
+# ---- thefuck: correct the previous command when you mistype ----
+# Invoke with `fuck` (or the alias below). Uses a per-shell init string.
+if command -v thefuck >/dev/null 2>&1; then
+    eval "$(thefuck --alias)"
+    # Friendlier alias if you prefer not to swear at your terminal
+    alias fix='fuck'
+fi
+
+# ---- Ollama: point clients at the local server; expose helpers ----
+# Bind to 0.0.0.0 so an SSH tunnel (ssh -L 11434:localhost:11434 coder) from the mac works.
+export OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
+
+# Start ollama in the background if it's installed and not already running.
+# Safe to call repeatedly — it's a no-op when a server is already up.
+ollama-start() {
+    if ! command -v ollama >/dev/null 2>&1; then
+        echo "ollama not installed" >&2
+        return 1
+    fi
+    if pgrep -u "$USER" -f "ollama serve" >/dev/null 2>&1; then
+        echo "ollama already running"
+        return 0
+    fi
+    mkdir -p "$HOME/.ollama"
+    nohup ollama serve >"$HOME/.ollama/server.log" 2>&1 &
+    disown 2>/dev/null || true
+    echo "ollama started (logs: ~/.ollama/server.log)"
+}
+
+ollama-stop() {
+    pkill -u "$USER" -f "ollama serve" && echo "ollama stopped" || echo "no ollama server running"
+}
+
+ollama-log() {
+    tail -f "$HOME/.ollama/server.log"
+}
+
+# Auto-start ollama on interactive shells in the remote workspace (linux only).
+# Skipped on macOS because the mac typically uses Ollama.app, and skipped for
+# non-interactive shells (scripts, scp, etc).
+case "$-" in
+    *i*)
+        if [ "$(uname -s)" = "Linux" ] && command -v ollama >/dev/null 2>&1; then
+            if ! pgrep -u "$USER" -f "ollama serve" >/dev/null 2>&1; then
+                ollama-start >/dev/null 2>&1 &
+            fi
+        fi
+        ;;
+esac
