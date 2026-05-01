@@ -5,6 +5,10 @@ REPO_DIR="$HOME/dotfiles"
 mkdir -p "$HOME/.local/bin"
 export PATH="$HOME/.local/bin:$PATH"
 
+# Use ~/.cache for large downloads — /tmp is often tiny or memory-backed
+CACHE_DIR="$HOME/.cache/dotfiles-install"
+mkdir -p "$CACHE_DIR"
+
 echo "🔧 Starting Setup..."
 
 # 1. INSTALL STARSHIP
@@ -30,22 +34,23 @@ else
 
     if [ "$INSTALLED_VERSION" != "${OLLAMA_VERSION#v}" ]; then
         echo "🦙 Installing Ollama ${OLLAMA_VERSION} (found: ${INSTALLED_VERSION:-none})..."
-        TMPDIR="$(mktemp -d)"
+        WORK_DIR="$CACHE_DIR/ollama-${OLLAMA_VERSION}"
+        mkdir -p "$WORK_DIR"
         curl -fL "https://github.com/ollama/ollama/releases/download/${OLLAMA_VERSION}/ollama-linux-amd64.tar.zst" \
-            -o "$TMPDIR/ollama.tar.zst"
+            -o "$WORK_DIR/ollama.tar.zst"
         # zstd ships with recent tar (--zstd); fall back to piping through zstd if not.
         if tar --help 2>&1 | grep -q -- '--zstd'; then
-            tar --zstd -xf "$TMPDIR/ollama.tar.zst" -C "$TMPDIR"
+            tar --zstd -xf "$WORK_DIR/ollama.tar.zst" -C "$WORK_DIR"
         else
-            zstd -d -c "$TMPDIR/ollama.tar.zst" | tar -xf - -C "$TMPDIR"
+            zstd -d -c "$WORK_DIR/ollama.tar.zst" | tar -xf - -C "$WORK_DIR"
         fi
         rm -f "$HOME/.local/bin/ollama"
         rm -rf "$HOME/.local/lib/ollama"
         mkdir -p "$HOME/.local/lib"
-        cp "$TMPDIR/bin/ollama" "$HOME/.local/bin/ollama"
+        cp "$WORK_DIR/bin/ollama" "$HOME/.local/bin/ollama"
         chmod +x "$HOME/.local/bin/ollama"
-        cp -r "$TMPDIR/lib/ollama" "$HOME/.local/lib/ollama"
-        rm -rf "$TMPDIR"
+        cp -r "$WORK_DIR/lib/ollama" "$HOME/.local/lib/ollama"
+        rm -rf "$WORK_DIR"
         echo "✅ Ollama ${OLLAMA_VERSION} installed."
     else
         echo "✅ Ollama ${OLLAMA_VERSION} is already installed."
@@ -78,12 +83,13 @@ else
     fi
     if [ "$INSTALLED_GH" != "${GH_VERSION#v}" ]; then
         echo "🐙 Installing gh ${GH_VERSION} (found: ${INSTALLED_GH:-none})..."
-        TMPDIR="$(mktemp -d)"
+        WORK_DIR="$CACHE_DIR/gh-${GH_VERSION}"
+        mkdir -p "$WORK_DIR"
         curl -fL "https://github.com/cli/cli/releases/download/${GH_VERSION}/gh_${GH_VERSION#v}_linux_amd64.tar.gz" \
-            | tar xzf - -C "$TMPDIR"
-        cp "$TMPDIR/gh_${GH_VERSION#v}_linux_amd64/bin/gh" "$HOME/.local/bin/gh"
+            | tar xzf - -C "$WORK_DIR"
+        cp "$WORK_DIR/gh_${GH_VERSION#v}_linux_amd64/bin/gh" "$HOME/.local/bin/gh"
         chmod +x "$HOME/.local/bin/gh"
-        rm -rf "$TMPDIR"
+        rm -rf "$WORK_DIR"
         echo "✅ gh ${GH_VERSION} installed."
     else
         echo "✅ gh ${GH_VERSION} is already installed."
