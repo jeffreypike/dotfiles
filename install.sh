@@ -134,6 +134,7 @@ if command -v ollama &> /dev/null; then
         # Give an existing server a moment; if none, start one just for the pull.
         STARTED_BY_INSTALLER=0
         if ! pgrep -u "$USER" -f "ollama serve" >/dev/null 2>&1; then
+            mkdir -p "$HOME/.ollama"
             nohup ollama serve >"$HOME/.ollama/server.log" 2>&1 &
             STARTED_BY_INSTALLER=1
             sleep 2
