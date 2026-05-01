@@ -21,12 +21,18 @@ fi
 # Always tracks the latest GitHub release so new workspaces can run recent models.
 # Post-0.2 releases ship as a tar.zst bundle (binary + CUDA/vulkan libs under lib/ollama).
 # Override by exporting OLLAMA_VERSION=vX.Y.Z before running (e.g. to pin in CI).
-OLLAMA_VERSION="${OLLAMA_VERSION:-$(curl -fsSL https://api.github.com/repos/ollama/ollama/releases/latest \
-    | grep -m1 '"tag_name"' | cut -d'"' -f4)}"
+if [ -z "${OLLAMA_VERSION:-}" ]; then
+    echo "🦙 Fetching latest ollama version..."
+    OLLAMA_VERSION="$(curl -fsSL https://api.github.com/repos/ollama/ollama/releases/latest 2>/dev/null \
+        | grep -m1 '"tag_name"' | cut -d'"' -f4 || true)"
+    # Fallback to a known-good version if the API call fails
+    if [ -z "$OLLAMA_VERSION" ]; then
+        echo "⚠️  GitHub API unreachable; falling back to ollama v0.22.0"
+        OLLAMA_VERSION="v0.22.0"
+    fi
+fi
 
-if [ -z "$OLLAMA_VERSION" ]; then
-    echo "⚠️  Could not determine latest Ollama version (GitHub API unreachable?). Skipping."
-else
+if [ -n "$OLLAMA_VERSION" ]; then
     INSTALLED_VERSION=""
     if command -v ollama &> /dev/null; then
         INSTALLED_VERSION="$(ollama --version 2>/dev/null | awk '/version is|client version/ {print $NF; exit}')"
@@ -67,12 +73,18 @@ fi
 
 # 4. INSTALL GITHUB CLI (gh)
 # Tracks the latest release from github.com/cli/cli. Override with GH_VERSION=vX.Y.Z.
-GH_VERSION="${GH_VERSION:-$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
-    | grep -m1 '"tag_name"' | cut -d'"' -f4)}"
+if [ -z "${GH_VERSION:-}" ]; then
+    echo "🐙 Fetching latest gh version..."
+    GH_VERSION="$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest 2>/dev/null \
+        | grep -m1 '"tag_name"' | cut -d'"' -f4 || true)"
+    # Fallback to a known-good version if the API call fails
+    if [ -z "$GH_VERSION" ]; then
+        echo "⚠️  GitHub API unreachable; falling back to gh v2.92.0"
+        GH_VERSION="v2.92.0"
+    fi
+fi
 
-if [ -z "$GH_VERSION" ]; then
-    echo "⚠️  Could not determine latest gh version. Skipping."
-else
+if [ -n "$GH_VERSION" ]; then
     INSTALLED_GH=""
     if command -v gh &> /dev/null; then
         INSTALLED_GH="$(gh --version 2>/dev/null | awk 'NR==1 {print $3}')"
