@@ -36,14 +36,10 @@ else
         echo "🦙 Installing Ollama ${OLLAMA_VERSION} (found: ${INSTALLED_VERSION:-none})..."
         WORK_DIR="$CACHE_DIR/ollama-${OLLAMA_VERSION}"
         mkdir -p "$WORK_DIR"
+        # Stream decompression (curl | zstd | tar) to avoid writing 2GB tarball to disk.
+        # Only the final extracted files land on disk, cutting space usage in half.
         curl -fL "https://github.com/ollama/ollama/releases/download/${OLLAMA_VERSION}/ollama-linux-amd64.tar.zst" \
-            -o "$WORK_DIR/ollama.tar.zst"
-        # zstd ships with recent tar (--zstd); fall back to piping through zstd if not.
-        if tar --help 2>&1 | grep -q -- '--zstd'; then
-            tar --zstd -xf "$WORK_DIR/ollama.tar.zst" -C "$WORK_DIR"
-        else
-            zstd -d -c "$WORK_DIR/ollama.tar.zst" | tar -xf - -C "$WORK_DIR"
-        fi
+            | zstd -d -c | tar -xf - -C "$WORK_DIR"
         rm -f "$HOME/.local/bin/ollama"
         rm -rf "$HOME/.local/lib/ollama"
         mkdir -p "$HOME/.local/lib"
