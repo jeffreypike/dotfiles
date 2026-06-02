@@ -5,11 +5,6 @@
 # ---- PATH ----
 export PATH="$HOME/.local/bin:$PATH"
 
-# pi (coding agent) — pi-node ships its bin under .local/share/pi-node/current
-if [ -d "$HOME/.local/share/pi-node/current/bin" ]; then
-    export PATH="$HOME/.local/share/pi-node/current/bin:$PATH"
-fi
-
 # ---- Detect shell once so downstream snippets can branch ----
 if [ -n "${ZSH_VERSION:-}" ]; then
     _CURRENT_SHELL="zsh"

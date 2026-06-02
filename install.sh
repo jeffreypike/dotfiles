@@ -139,7 +139,14 @@ if ! command -v thefuck &> /dev/null; then
     fi
 fi
 
-# 6. LINK FILES
+# 6. GIT IDENTITY
+# Set on every workspace so commits are authored consistently. `git config --global`
+# only touches user.name/user.email and leaves the wealthsimple URL rewrite and
+# signing config in ~/.gitconfig untouched.
+git config --global user.name "jeffreypike"
+git config --global user.email "jeffrey.pike@wealthsimple.com"
+
+# 7. LINK FILES
 echo "🔗 Linking Configs..."
 mkdir -p "$HOME/.config"
 ln -sf "$REPO_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
@@ -147,7 +154,7 @@ ln -sf "$REPO_DIR/.bashrc" "$HOME/.bashrc"
 ln -sf "$REPO_DIR/.zshrc" "$HOME/.zshrc"
 # .shellrc is sourced by both rcs via $HOME/dotfiles/.shellrc, no symlink needed
 
-# 7. PRE-PULL DEFAULT OLLAMA MODEL (background, non-blocking)
+# 8. PRE-PULL DEFAULT OLLAMA MODEL (background, non-blocking)
 # Skipped if ollama isn't installed, already has the model, or isn't running.
 if command -v ollama &> /dev/null; then
     DEFAULT_MODEL="${OLLAMA_DEFAULT_MODEL:-gemma4:e4b}"
