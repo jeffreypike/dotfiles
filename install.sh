@@ -11,6 +11,27 @@ mkdir -p "$CACHE_DIR"
 
 echo "🔧 Starting Setup..."
 
+# 0. INSTALL mawk (BusyBox awk on Chainguard mangles backslash escapes in gsub,
+# which breaks ble.sh's bind-save quoting and produces noisy
+#   `bash: eval: line N: syntax error near unexpected token \`(\''`
+# warnings on every shell startup. mawk builds in seconds and ble.sh prefers it
+# automatically over busybox awk.)
+if ! command -v mawk &> /dev/null && ! command -v gawk &> /dev/null && ! command -v nawk &> /dev/null; then
+    echo "🦖 Installing mawk (workaround for busybox awk gsub bug)..."
+    MAWK_DIR="$CACHE_DIR/mawk-src"
+    rm -rf "$MAWK_DIR" && mkdir -p "$MAWK_DIR"
+    if curl -fsSL https://invisible-island.net/archives/mawk/mawk.tar.gz \
+        | tar xzf - -C "$MAWK_DIR" --strip-components=1 \
+        && (cd "$MAWK_DIR" && ./configure --prefix="$HOME/.local" >/dev/null 2>&1 && make -s >/dev/null 2>&1); then
+        cp "$MAWK_DIR/mawk" "$HOME/.local/bin/mawk"
+        chmod +x "$HOME/.local/bin/mawk"
+        echo "✅ mawk installed."
+    else
+        echo "⚠️  mawk build failed; ble.sh may emit syntax-error warnings."
+    fi
+    rm -rf "$MAWK_DIR"
+fi
+
 # 1. INSTALL STARSHIP
 if ! command -v starship &> /dev/null; then
     echo "🚀 Installing Starship..."
